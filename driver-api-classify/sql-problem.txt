@@ -1,0 +1,34 @@
+include/linux/pci.h 662
+module
+Bus/PCI				fixed
+
+Framework/kobject input好像有错     fixed
+
+Framework/device netdevice的分类有误     fixed
+
+tasklet的函数应该算是Delay/tasklet      fixed
+
+module.h  moduleparam.h包含的应该算是Module      fixed
+
+elf.h  binfmts.h 应该算Klib/fs       fixed
+security.h 应该算是 Security      fixed
+
+security.h L58 sock应该只是声明，没有定义
+
+skbuff.h 应该算是 Memory/net      fixed
+
+vmalloc.h 应该算是 Memory/vmalloc       fixed
+
+slab.h slub.h slob.h 应该算是Memory/kmalloc     fixed
+
+pda.h是啥?   好像是processor datastructure的缩写
+
+driver为何需要signal?   某些判定条件用到了
+
+spinlock.h中的printk应该只是声明   fixed
+ 
+e1000_hw.h有许多没有name的,为何?
+比如L45, 应该是enum类型,名字应该是e1000_mac_type
+
+这个问题还有待分析，我在相应的源码中发现这些enum类型都是typedef enum，可能是和这种组合类型有关。
+可能是llvm认为typedef后面的第二个标识符才是类型的名称，所以就忽略了第一个标识符，而typedef enum的名称就是第一个标识符，并没有第二个标识符，所以导致name属性为空

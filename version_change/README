@@ -1,0 +1,21 @@
+Version Change Analysis Tool
+
+Usage:
+
+The tool is a python script, we need 5 arguments to support it to do analysis:
+
+'-db1' -- the database file of first linux version
+'-db2' -- the database file of second linux version
+'-source1' -- linux driver sources directory of the first version
+'-source2' -- linux driver sources directory of the second version
+'-driver' -- the name of the driver
+
+Example:
+
+Linux 3.5.4 to linux 3.8.13, e1000
+
+command:
+
+$python api_diff.py -db1 /path/to/e1000-3.5.4.sqlite -db2 /path/to/e1000-3.8.13.sqlite -source1 /path/to/linux/3.5.4/e1000/ -source2 /path/to/linux/3.8.13/e1000/ -driver e1000
+
+If all is OK, the tool will generate a database file named "dfference.sqlite", and there are two table in the database, "decls_diff" and "macros.diff".

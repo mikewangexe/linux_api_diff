@@ -1,0 +1,11 @@
+some case that will be ignored by this tool:
+
+1 struct __key_reference_with_attributes : fixed
+file: include/linux/key.h
+reason: this struct is not actually defined, so we can not find the definition
+
+2 files in scripts and tools
+scripts and tools are not belong to kernel code, and do analysis is meaningless
+
+3 some macros that need to be analyzed twice : fixed
+some macors need to be analyzed twice to be printed, for the performance of analyzing kernel, we ignored them
