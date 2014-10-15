@@ -13,12 +13,14 @@ parser.add_argument('-mode', help='1 -- analyze all apis in object directory\n2 
 parser.add_argument('-cmd_file', help='file to extract from', required=False)
 args = parser.parse_args()
 
+# specify the object directory to analyze
 OBJECT = ''
 if args.obj:
 	OBJECT = args.obj
 else:
 	OBJECT = os.getcwd() 
 
+# check the MODE
 MODE = 0
 if args.mode == '1' or args.mode == '2':
 	MODE = int(args.mode)
@@ -41,7 +43,7 @@ elif os.path.exists(OBJECT):
 else:
 	print "[ERROR] argument -obj is invalid"
 
-# initialize database
+# initialize sqlite3 database
 print "Initializing database file"
 db_file = ''
 if MODE == 1:
@@ -241,6 +243,7 @@ def common_error_process(bug_info):
 #                return False
         return True
 
+# process compiling error "BUILD_BUG_ON"
 def BUILD_BUG_ON_process(bug_info):
         info_list = bug_info.strip().split('\n')
         err_content = []
@@ -271,16 +274,19 @@ def BUILD_BUG_ON_process(bug_info):
                 return False
         return True
 
+# common error handler
 def error_handle():
 	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> /tmp/log 2>/tmp/bug_info'])
 	os.system(command)
 	bug_info = os.popen("cat /tmp/bug_info").read()
+        # process VLAIS error
 	if bug_info.find('variable length array in structure') >= 0:
 		print "find VLAIS error, try to fix..."
 		if not VLAIS_process(bug_info):
 			print "fix failed, please fix it manually"
 			quit()
 		print "fix successed, now continue..."
+        # process common error
         elif bug_info.find(": error:") >= 0:
                 print "find common error, try to fix..."
                 if not common_error_process(bug_info):
@@ -296,11 +302,15 @@ database = os.getcwd() + '/' + db_file
 #os.chdir(kernel_top_dir)
 clang_args = ''
 #black_list = ['hmac.o', 'raid10.o', 'ip6_tables.o', 'arp_tables.o', 'ip_tables.o']
+
+# MODE 1 will load dump-decls pass
 if MODE == 1:
 	clang_args="-cc1 -std=gnu89 -load " + plugin + ' -plugin dump-decls -plugin-arg-dump-decls ' + database
+# MODE 2 will load decl-filter pass
 elif MODE == 2:	
 	clang_args="-cc1 -std=gnu89 -print-stats -load " + plugin + ' -plugin decl-filter -plugin-arg-decl-filter ' + database
 
+# restore temporary log file
 os.system('echo > /tmp/log; echo > /tmp/error; echo > /tmp/cmd; echo > /tmp/sed_cmd')
 for s in SRC_LIST:
 	# ignore scripts and tools directory
@@ -325,8 +335,10 @@ for s in SRC_LIST:
 	os.system('echo %s >> /tmp/cmd' % kernel_args)
 	if os.system(command) != 0:
 		error_handle()
+# restore files which were modified
 restore_file('')
 print "Finished"
 
+# compute the cost time
 end = datetime.datetime.now()
 print "total cost time : " + str((end - start).seconds) + 's'
