@@ -70,9 +70,9 @@ print "Database file is " + db_file
 print "Start analyzing... "
 plugin = ''
 if MODE == 1:
-	plugin = '../header-gen/clang-plugins/build/lib/DumpDecls.so'
+	plugin = './clang-plugins/build/lib/DumpDecls.so'
 elif MODE == 2:	
-	plugin = '../header-gen/clang-plugins/build/lib/DeclFilter.so'
+	plugin = './clang-plugins/build/lib/DeclFilter.so'
 print "clang plugin : " + plugin
 # set kernel compile args
 asm_args = '-include ' + os.path.realpath(sys.path[0]) + '/fake_asm.h'
