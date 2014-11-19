@@ -17,7 +17,7 @@
 
 	$mkdir build-llvm
 	$cd build-llvm
-	$../llvm/configure --enable-optimized
+	$../configure --enable-optimized
 	$make
 	$sudo make install
 
