@@ -19,3 +19,12 @@ kernel_api_decl的部署说明见[kernel_api_decl/INSTALL.md](https://github.com
 ###使用说明
 
 kernel_api_decl的使用说明见[kernel_api_decl/README.md](https://github.com/mikewangexe/linux_api_diff/blob/master/kernel_api_decl/README.md)
+
+
+###远程调用
+
+远程调用脚本：（未完成）
+
+在工具所在机器的脚本使用方法：./home/ysxun/decl.sh /home/whuan/linux-kernels linux-3.8.13 linux-3.5.4
+
+参数：源码路径、版本1、版本2
