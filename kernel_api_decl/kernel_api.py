@@ -323,6 +323,8 @@ for s in SRC_LIST:
 		continue
 	cmp_args_gen(s)
 	kernel_args = '-' + ' -'.join(compile_cmd)
+        if kernel_args == '-':
+            continue
 #	print "Compile command is : "
 #	print kernel_args
 
