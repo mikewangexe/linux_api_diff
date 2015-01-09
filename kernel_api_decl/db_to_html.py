@@ -41,4 +41,3 @@ html.write("""
 </html>
 """)
 
-os.system("google-chrome results.html")
