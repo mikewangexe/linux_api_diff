@@ -139,12 +139,15 @@ def cmp_args_gen(filename):
 
 # backup and restore specific file
 file_list = []
+backup_count = 0
 def backup_file(file_name):
         global file_list
+        global backup_count
 	if not os.path.exists(file_name):
 		print "[Error] file isn't existed"
 		return False	
 	if os.path.exists(file_name + '.bak'):
+                backup_count += 1
 		return True
         file_list.append(file_name)
 	if os.system("cp %s %s.bak" % (file_name, file_name)) == 0:
@@ -154,12 +157,16 @@ def backup_file(file_name):
 
 def restore_file(file_name):
         global file_list
+        global backup_count
         if file_name == '':
                 for f in file_list:
                         os.system("mv %s.bak %s" % (f, f))
                 return True
         else:
-                if not os.path.exists(file_name + '.bak'):
+                if backup_count > 0:
+                        backup_count -= 1
+                        return True
+                elif not os.path.exists(file_name + '.bak'):
 		        print "[Error] backup file isn't existed"
 		        return False
 	        if os.system("mv %s.bak %s" % (file_name, file_name)) == 0:
@@ -200,9 +207,9 @@ def VLAIS_process(bug_info):
 
 	print "process " + s + " again"
 	if os.system(command) != 0:
+		error_handle()
 		restore_file(file_name)
-		return False
-	if not restore_file(file_name):
+	elif not restore_file(file_name):
 		return False
 	return True
 
