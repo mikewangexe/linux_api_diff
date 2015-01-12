@@ -57,7 +57,7 @@ conn_out = sqlite3.connect(OUTPUT_DB)
 cur_out = conn_out.cursor()
 cur_out.execute('DROP TABLE IF EXISTS decls_chg')
 cur_out.execute('CREATE TABLE IF NOT EXISTS decls_chg (name TEXT NOT NULL, file TEXT NOT NULL,\
- start_line INTEGER NOT NULL, kind INTERGER NOT NULL, old_decl TEXT NOT NULL,\
+ start_line INTEGER NOT NULL, kind INTEGER NOT NULL, old_decl TEXT NOT NULL,\
  old_file TEXT NOT NULL, new_decl TEXT NOT NULL, new_file TEXT NOT NULL,\
  type TEXT NOT NULL, PRIMARY KEY(name, file, start_line, kind, old_decl, new_decl, old_file, new_file))')
 conn_out.commit()
