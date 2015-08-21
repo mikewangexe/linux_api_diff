@@ -9,6 +9,7 @@ import datetime
 start = datetime.datetime.now()
 parser = argparse.ArgumentParser()
 parser.add_argument('-obj', help='object file or directory', required=False)
+parser.add_argument('-abs', help='linux absolute directory', required=False)
 parser.add_argument('-mode', help='1 -- analyze all apis in object directory\n2 -- analyze apis used in object directory', required=True)
 parser.add_argument('-cmd_file', help='file to extract from', required=False)
 args = parser.parse_args()
@@ -19,6 +20,11 @@ if args.obj:
 	OBJECT = args.obj
 else:
 	OBJECT = os.getcwd() 
+abspath= ''
+if args.abs:
+	abspath = args.abs
+else:
+	abspath = os.getcwd() 
 
 # check the MODE
 MODE = 0
@@ -76,10 +82,13 @@ elif MODE == 2:
 print "clang plugin : " + plugin
 # set kernel compile args
 asm_args = '-include ' + os.path.realpath(sys.path[0]) + '/fake_asm.h'
-clang_include = '-I/usr/local/lib/clang/3.3/include'
+#clang_include = '-I/usr/local/lib/clang/3.3/include'
+clang_include = '-I/home/chyyuu/llvm-related/install/include/clang'
 kernel_args = ''
 compile_cmd = []
-abspath = ''
+#abspath = ''
+#abspath = args.obj
+print "###current abs path::",abspath
 
 # auto analyze kernel compile args
 def cmp_args_gen(filename):
@@ -110,6 +119,10 @@ def cmp_args_gen(filename):
 
 	compile_cmd = os.popen('sed -n "1,1p" %s' % cmd_file).read().strip().split(' -')
 	temp = compile_cmd[:]
+#	print "###cmd_file:: ", cmd_file
+#	print "###compile_cmd:: ",compile_cmd
+#	print "###temp:: ",temp
+	
 	# analyze the absolute path of file
 	for cc in temp:
 		if cc == '':
@@ -125,13 +138,18 @@ def cmp_args_gen(filename):
 	if abspath == '':
 		print "can not find abspath."
 		quit()
-	kernel_top_dir = abspath[1:abspath.find('/arch/')]
-#	print "kernel top dir is : " + kernel_top_dir
+#	kernel_top_dir = abspath[1:abspath.find('/arch/')]
+	kernel_top_dir = abspath
+#	print "###kernel top dir is : " + kernel_top_dir
 	temp = compile_cmd[:]
 	compile_cmd = []
+#	print "###old compile_cmd:: ",temp
 	for cc in temp:
 		if cc.startswith('I') and not cc.startswith('I/'):
-			compile_cmd.append('I' + kernel_top_dir + '/' + cc[1:]) 
+#			compile_cmd.append('I' + kernel_top_dir + '/' + cc[1:]) 
+			compile_cmd.append('I' + kernel_top_dir + cc[1:]) 
+		elif cc.startswith('include ') and not cc.startswith('include /'):
+			compile_cmd.append('include ' + kernel_top_dir + cc[8:]) 
 		elif cc.find('\\#s') >= 0:
 			compile_cmd.append(cc.replace('\\#s', '#s'))
 		else:
@@ -199,11 +217,11 @@ def VLAIS_process(bug_info):
 			mod_line = os.popen(sed_cmd).read()
 		else:
 			mod_line = "//" + orig_line
-		sed_cmd = "sed -e '%si%s' -e '%sd' %s > /tmp/temp.c" % (line, mod_line, line, file_name)
+		sed_cmd = "sed -e '%si%s' -e '%sd' %s > ./tmp/temp.c" % (line, mod_line, line, file_name)
 		#print sed_cmd
-		os.system("echo %s >> /tmp/sed_cmd" % sed_cmd)
+		os.system("echo %s >> ./tmp/sed_cmd" % sed_cmd)
 		os.system(sed_cmd)
-		os.system("cp /tmp/temp.c %s" % file_name)
+		os.system("cp ./tmp/temp.c %s" % file_name)
 
 	print "process " + s + " again"
 	if os.system(command) != 0:
@@ -237,10 +255,10 @@ def common_error_process(bug_info):
                         mod_line = '//' + orig_line
                 else:
                         mod_line = ''
-                sed_cmd = "sed -e '%si%s' -e '%sd' %s > /tmp/temp.c" % (line, mod_line, line, file_name)
-                os.system("echo %s >> /tmp/sed_cmd" % sed_cmd)
+                sed_cmd = "sed -e '%si%s' -e '%sd' %s > ./tmp/temp.c" % (line, mod_line, line, file_name)
+                os.system("echo %s >> ./tmp/sed_cmd" % sed_cmd)
                 os.system(sed_cmd)
-                os.system("cp /tmp/temp.c %s" % file_name)
+                os.system("cp ./tmp/temp.c %s" % file_name)
 
         print "process " + s + " again"
         if os.system(command) != 0:
@@ -268,10 +286,10 @@ def BUILD_BUG_ON_process(bug_info):
                 sed_cmd = "sed -n '%sp' %s" % (line, file_name)
                 orig_line = os.popen(sed_cmd).read()
                 mod_line = "//" + orig_line
-                sed_cmd = "sed -e '%si%s' -e '%sd' %s > /tmp/temp.c" % (line, mod_line, line, file_name)
-                os.system("echo %s >> /tmp/sed_cmd" % sed_cmd)
+                sed_cmd = "sed -e '%si%s' -e '%sd' %s > ./tmp/temp.c" % (line, mod_line, line, file_name)
+                os.system("echo %s >> ./tmp/sed_cmd" % sed_cmd)
                 os.system(sed_cmd)
-                os.system("cp /tmp/temp.c %s" % file_name)
+                os.system("cp ./tmp/temp.c %s" % file_name)
 
         print "process " + s + " again"
         if os.system(command) != 0:
@@ -283,9 +301,9 @@ def BUILD_BUG_ON_process(bug_info):
 
 # common error handler
 def error_handle():
-	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> /tmp/log 2>/tmp/bug_info'])
+	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> ./tmp/log 2>./tmp/bug_info'])
 	os.system(command)
-	bug_info = os.popen("cat /tmp/bug_info").read()
+	bug_info = os.popen("cat ./tmp/bug_info").read()
         # process VLAIS error
 	if bug_info.find('variable length array in structure') >= 0:
 		print "find VLAIS error, try to fix..."
@@ -318,8 +336,9 @@ elif MODE == 2:
 	clang_args="-cc1 -std=gnu89 -print-stats -load " + plugin + ' -plugin decl-filter -plugin-arg-decl-filter ' + database
 
 # restore temporary log file
-os.system('echo > /tmp/log; echo > /tmp/error; echo > /tmp/cmd; echo > /tmp/sed_cmd')
+os.system('rm -rf ./tmp; mkdir ./tmp; echo > ./tmp/log; echo > ./tmp/error; echo > ./tmp/cmd; echo > ./tmp/sed_cmd')
 for s in SRC_LIST:
+#	print "s in SRC_LIST:: ",s
 	# ignore scripts and tools directory
 	if s.find('/scripts/') >= 0 or s.find('/tools/') >= 0 or s.find(".mod.") >= 0:
 		continue
@@ -337,11 +356,12 @@ for s in SRC_LIST:
 
 	s = s.replace('.o', '.c')
 	print "processing file " + s
-	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> /tmp/log 2>>/tmp/error'])
-	os.system('echo %s >> /tmp/error' % s)
-	os.system('echo %s >> /tmp/log' % s)
-	os.system('echo %s >> /tmp/cmd' % s)
-	os.system('echo %s >> /tmp/cmd' % kernel_args)
+	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> ./tmp/log 2>>./tmp/error'])
+#	print "### command :: ",command
+	os.system('echo %s >> ./tmp/error' % s)
+	os.system('echo %s >> ./tmp/log' % s)
+	os.system('echo %s >> ./tmp/cmd' % s)
+	os.system('echo %s >> ./tmp/cmd' % kernel_args)
 	if os.system(command) != 0:
 		error_handle()
 # restore files which were modified
