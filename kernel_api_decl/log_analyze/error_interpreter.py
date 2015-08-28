@@ -243,12 +243,13 @@ for line in err_file:
 print len(problems['arguments'])
 search_diff_results(problems)
 
-for e in problems['undeclared']:
-	print "----Error information as follows:"
-	print "\t" + e.get_err_info()
-	print "----Related differency analysis results as follows:"
-	print e.diff_result[0]
-	e.interpret()
+for p in problems:
+	for e in problems[p]:
+		print "----Error information as follows:"
+		print "\t" + e.get_err_info()
+		print "----Related differency analysis results as follows:"
+		print e.diff_result[0]
+		e.interpret()
 
 #problems['undeclared'][6].interpret()
 
