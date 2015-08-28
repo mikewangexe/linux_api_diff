@@ -15,6 +15,47 @@ class commit:
 		self.patch = {}
 		self.full_commit = None
 
+	def __str__(self):
+		ret  = "\tcommit id: " + self.commit_id + '\n'
+		for f in self.patch:
+			ret += "\t" + f + '\n\n'
+			ret += ''.join(self.get_diff_content(f))
+		return ret
+
+	def filter_output(self, key):
+		ret  = "\tcommit id: " + self.commit_id + '\n'
+		for f in self.patch:
+			ret += "\t" + f + '\n\n'
+			content = self.get_diff_content(f)
+			for c in content:
+				if c.find(key) >= 0:
+					ret += c
+		return ret
+
+
+	def get_diff_content(self, fname):
+		content = []
+		block = ''
+		isStart = False
+		for l in self.patch[fname]:
+			if not l.startswith("+++") and l.startswith("+"):
+				if isStart == False:
+					block = ''
+					isStart = True
+				block += "\t" + l 
+				continue
+			if not l.startswith("---") and l.startswith("-"):
+				if isStart == False:
+					block = ''
+					isStart = True
+				block += "\t" + l 
+				continue
+			if isStart == True:
+				block += '\n'
+				content.append(block)
+				isStart = False
+		return content
+
 	def full_commit_parser(self, fc):
 		if len(fc) < 1:
 			return False

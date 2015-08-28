@@ -61,3 +61,11 @@ argpatterns = {
     'stat-by-year' : re.compile(r'^--stat-by-year'),
     'stat-output' : re.compile(r'^--stat-output=(.+)'),
 }
+
+# add by wh
+err_patterns = {
+	'expected': re.compile('^([^:]+):([0-9]+):[0-9]+: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘([^()]*)’$'),
+	'implicit': re.compile('^([^:]+):([0-9]+):[0-9]+: error: implicit declaration of function ‘([^()]*)’.*$'),
+	'undeclared': re.compile('^([^:]+):([0-9]+):[0-9]+: error: ‘([^()]*)’ undeclared \(first use in this function\)$'),
+	'arguments': re.compile('^([^:]+):([0-9]+):[0-9]+: error: too few arguments to function ‘([^()]*)’$'),
+}
