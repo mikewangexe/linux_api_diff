@@ -180,10 +180,11 @@ def suggestion_search(api, chg_type):
 	os.chdir(LINUX_GIT)
 	git_cmd = ''
 	if chg_type == 'DECL CHANGED':
-		git_cmd = "git log --no-merges -p -G'"
+		git_cmd = "git log --no-merges -p -3 -G'"
 	else:
-		git_cmd = "git log --no-merges -p -S'"
-	git_cmd += api + "' " + OLD_VER + ".." + NEW_VER + " -- drivers/" 
+		git_cmd = "git log --no-merges -p -3 -S'"
+	git_cmd += api + "' " + OLD_VER + ".." + NEW_VER + " -- drivers/"
+	print git_cmd
 	patches = LogPatchSplitter(os.popen(git_cmd))
 	commits = []
 	for p in patches:
@@ -242,6 +243,7 @@ for line in err_file:
 
 print len(problems['arguments'])
 search_diff_results(problems)
+#problems['arguments'][0].interpret()
 
 for p in problems:
 	for e in problems[p]:

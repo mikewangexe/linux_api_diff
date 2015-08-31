@@ -25,8 +25,10 @@ class commit:
 	def filter_output(self, key):
 		ret  = "\tcommit id: " + self.commit_id + '\n'
 		for f in self.patch:
-			ret += "\t" + f + '\n\n'
 			content = self.get_diff_content(f)
+			if len(content) == 0:
+				continue
+			ret += "\t" + f + '\n\n'
 			for c in content:
 				if c.find(key) >= 0:
 					ret += c
@@ -38,22 +40,32 @@ class commit:
 		block = ''
 		isStart = False
 		for l in self.patch[fname]:
-			if not l.startswith("+++") and l.startswith("+"):
-				if isStart == False:
+			if l.startswith("@@"):
+				if block != '':
+					block += '\n'
+					content.append(block)
 					block = ''
-					isStart = True
-				block += "\t" + l 
-				continue
-			if not l.startswith("---") and l.startswith("-"):
-				if isStart == False:
-					block = ''
-					isStart = True
-				block += "\t" + l 
-				continue
+				isStart = True
 			if isStart == True:
-				block += '\n'
-				content.append(block)
-				isStart = False
+				block += "\t" + l
+#			if not l.startswith("+++") and l.startswith("+"):
+#				if isStart == False:
+#					block = ''
+#					isStart = True
+#				block += "\t" + l 
+#				continue
+#			if not l.startswith("---") and l.startswith("-"):
+#				if isStart == False:
+#					block = ''
+#					isStart = True
+#				block += "\t" + l 
+#				continue
+#			if isStart == True:
+#				block += '\n'
+#				content.append(block)
+#				isStart = False
+		if block != '':
+			content.append(block)
 		return content
 
 	def full_commit_parser(self, fc):
