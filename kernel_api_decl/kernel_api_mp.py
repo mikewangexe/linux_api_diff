@@ -198,7 +198,7 @@ def restore_file(file_name):
 			return False
 
 # function to process error which could be solved
-def VLAIS_process(bug_info, tmp_dir, s):
+def VLAIS_process(bug_info, tmp_dir, s, command, kernel_args):
 	info_list = bug_info.strip().split('\n')
 	err_content = []
 	for i in info_list:
@@ -229,13 +229,13 @@ def VLAIS_process(bug_info, tmp_dir, s):
 
 	print "process " + s + " again"
 	if os.system(command) != 0:
-		error_handle()
+		error_handle(s, kernel_args, tmp_dir)
 		restore_file(file_name)
 	elif not restore_file(file_name):
 		return False
 	return True
 
-def common_error_process(bug_info, tmp_dir, s):
+def common_error_process(bug_info, tmp_dir, s, command, kernel_args):
         info_list = bug_info.strip().split('\n')
         err_content = []
         for i in info_list:
@@ -311,14 +311,14 @@ def error_handle(s, kernel_args, tmp_dir):
         # process VLAIS error
 	if bug_info.find('variable length array in structure') >= 0:
 		print "find VLAIS error, try to fix..."
-		if not VLAIS_process(bug_info, tmp_dir, s):
+		if not VLAIS_process(bug_info, tmp_dir, s, command, kernel_args):
 			print "fix failed, please fix it manually"
 			quit()
 		print "fix successed, now continue..."
         # process common error
         elif bug_info.find(": error:") >= 0:
                 print "find common error, try to fix..."
-                if not common_error_process(bug_info, tmp_dir, s):
+                if not common_error_process(bug_info, tmp_dir, s, command, kernel_args):
                         print "fix failed, please fix it manually"
                         quit()
                 print "fix successed, now continue..."
