@@ -6,7 +6,6 @@ import sqlite3
 from commit_parser import commit
 from patterns import err_patterns
 from logparser import LogPatchSplitter
-from termcolor import colored
 
 # arguments need in analyze
 parser = argparse.ArgumentParser()
@@ -17,19 +16,16 @@ parser.add_argument('-new_ver', help='new linux version, like v3.4', required=Tr
 parser.add_argument('-linux_git', help='the path to linux git tree directory', required=True)
 args = parser.parse_args()
 
-def err_print(error):
-	return colored(error, 'red')
-
 # check if arguments are valid
-print colored('Checking arguments...', 'green')
+print 'Checking arguments...'
 if not os.path.exists(args.err_report):
-	err_print("[Error] \'" + args.err_report + "\' is not existed.")
+	print "[Error] \'" + args.err_report + "\' is not existed."
 	quit()
 if not os.path.exists(args.diff_db):
-	err_print("[Error] \'" + args.diff_db + "\' is not existed.")
+	print "[Error] \'" + args.diff_db + "\' is not existed."
 	quit()
 if not os.path.exists(args.linux_git):
-	err_print("[Error] \'" + args.linux_git + "\' is not existed.")
+	print "[Error] \'" + args.linux_git + "\' is not existed."
 	quit()
 
 # some useful variables
@@ -48,15 +44,15 @@ CURSOR_DIFF = conn_diff.cursor()
 os.chdir(LINUX_GIT)
 tags = os.popen('git tag').read().strip().split('\n')
 if len(tags) <= 1:
-	err_print("[Error] linux git tree is invalid.")
+	print "[Error] linux git tree is invalid."
 	quit()
 if not args.old_ver in tags:
-	err_print("[Error] linux version " + args.old_ver + " is not in linux git tree.")
+	print "[Error] linux version " + args.old_ver + " is not in linux git tree."
 	quit()
 if not args.new_ver in tags:
-	err_print("[Error] linux version " + args.new_ver + " is not in linux git tree.")
+	print "[Error] linux version " + args.new_ver + " is not in linux git tree."
 	quit()
-print colored('Done', 'green')
+print 'Done'
 
 # class of diff result
 class Diff:
@@ -112,14 +108,14 @@ class Error:
 
 	def interpret(self):
 		if self.api == '' or len(self.diff_result) == 0:
-			print colored("[ERROR]: information is incomplete, can not interpret.",'red')
+			print "[ERROR]: information is incomplete, can not interpret."
 			return
 		self.commit = commit_locate(self.api, self.diff_result[0].fname, self.kind)
-		print colored("[INTERPRET] this error may be caused by the commit following\n",'cyan')
+		print "[INTERPRET] this error may be caused by the commit following\n"
 		for c in self.commit:
 			print c.filter_output(self.api)
 		self.suggestion = suggestion_search(self.api, self.diff_result[0].type_chg)
-		print colored("[INTERPRET] and maybe you could fix this error as the following commit does\n",'cyan')
+		print "[INTERPRET] and maybe you could fix this error as the following commit does\n"
 		for s in self.suggestion:
 			print s.filter_output(self.api)
 
@@ -221,7 +217,7 @@ def search_diff_results(problems):
 					err.diff_result.append(diff)
 
 # analyze error report, extract error type and reason
-print colored('Reading and analyzing error report...', 'green'),
+print 'Reading and analyzing error report...',
 err_file = open(ERR_REPORT, 'r')
 # store error type and the corresponding apis, the key is error type
 problems = {}
@@ -252,25 +248,25 @@ for p in problems:
 	for e in problems[p]:
 		p_count += 1
 
-print colored('Finished', 'yellow')
-print colored("Found " + str(p_count) + " problems in error report.", 'green')
+print 'Finished'
+print "Found " + str(p_count) + " problems in error report."
 
-print colored("Querying differences results in database...", 'green'),
+print "Querying differences results in database...",
 search_diff_results(problems)
-print colored('Finished', 'yellow')
+print 'Finished'
 #problems['arguments'][0].interpret()
 
-print colored('Start to analyze each problem...\n', 'green')
+print 'Start to analyze each problem...\n'
 for p in problems:
 	for e in problems[p]:
-		print colored("----Error information as follows:", 'cyan')
+		print "----Error information as follows:"
 		print "\t" + e.get_err_info()
-		print colored("----Related difference analysis results as follows:", 'cyan')
+		print "----Related difference analysis results as follows:"
 		print e.diff_result[0]
-		print colored('Try to interpret...', 'green')
+		print 'Try to interpret...'
 		e.interpret()
-		print colored('Interpret finished.', 'yellow')
-print colored('All problems done.', 'green')
+		print 'Interpret finished.'
+print 'All problems done.'
 #problems['undeclared'][6].interpret()
 
 
