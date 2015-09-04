@@ -95,7 +95,6 @@ class Error:
 		self.info = info
 		self.code = code
 		self.kind = kind
-		self.reason = ''
 		self.api = api
 		self.diff_result = []
 		self.commit = []
@@ -197,7 +196,6 @@ def suggestion_search(api, chg_type):
 
 # search diff results from database
 def search_diff_results(problems):
-#	errs = problems['expected']
 	for ty in problems:
 		errs = problems[ty]
 		for err in errs:
@@ -259,6 +257,8 @@ print 'Finished'
 print 'Start to analyze each problem...\n'
 for p in problems:
 	for e in problems[p]:
+		if len(e.diff_result) == 0:
+			continue
 		print "----Error information as follows:"
 		print "\t" + e.get_err_info()
 		print "----Related difference analysis results as follows:"
