@@ -89,6 +89,14 @@ def table_insert(table_name, value_list):
 		return True
 		value_list[4] = value_list[4].replace("\'", "\\\'")
 		print value_list
+
+	# fix the \\ in defination
+	if table_name == 'macros_chg':
+		if value_list[5].find("'") >= 0:
+			value_list[5] = value_list[5].replace("'", "''")
+		if value_list[3].find("'") >= 0:
+			value_list[3] = value_list[3].replace("'", "''")
+
 	if value_list[6].find("\'") >= 0:
 		return True
 		value_list[6] = value_list[6].replace("\'", "\\\'")
@@ -107,6 +115,7 @@ def table_insert(table_name, value_list):
 		if len(value_list) != 8:
 			print "[Error] value_list don't contain enough values to insert table macros_chg"
 			return False
+#		print value_list
 		if not cur_out.execute("INSERT INTO macros_chg VALUES('%s', '%s', %d, '%s',\
  '%s', '%s', '%s', '%s')" % (value_list[0], value_list[1], value_list[2], value_list[3],\
  value_list[4], value_list[5], value_list[6], value_list[7])):
