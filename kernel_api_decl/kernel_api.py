@@ -119,7 +119,7 @@ def cmp_args_gen(filename):
 
 	compile_cmd = os.popen('sed -n "1,1p" %s' % cmd_file).read().strip().split(' -')
 	temp = compile_cmd[:]
-#	print "###cmd_file:: ", cmd_file
+	print "###cmd_file:: ", cmd_file
 #	print "###compile_cmd:: ",compile_cmd
 #	print "###temp:: ",temp
 	
@@ -217,11 +217,11 @@ def VLAIS_process(bug_info):
 			mod_line = os.popen(sed_cmd).read()
 		else:
 			mod_line = "//" + orig_line
-		sed_cmd = "sed -e '%si%s' -e '%sd' %s > ./tmp/temp.c" % (line, mod_line, line, file_name)
+		sed_cmd = "sed -e '%si%s' -e '%sd' %s > %s/temp.c" % (line, mod_line, line, file_name, tmp_dir)
 		#print sed_cmd
-		os.system("echo %s >> ./tmp/sed_cmd" % sed_cmd)
+		os.system("echo %s >> %s/sed_cmd" % (sed_cmd, tmp_dir))
 		os.system(sed_cmd)
-		os.system("cp ./tmp/temp.c %s" % file_name)
+		os.system("cp %s/temp.c %s" % (tmp_dir, file_name))
 
 	print "process " + s + " again"
 	if os.system(command) != 0:
@@ -255,10 +255,10 @@ def common_error_process(bug_info):
                         mod_line = '//' + orig_line
                 else:
                         mod_line = ''
-                sed_cmd = "sed -e '%si%s' -e '%sd' %s > ./tmp/temp.c" % (line, mod_line, line, file_name)
-                os.system("echo %s >> ./tmp/sed_cmd" % sed_cmd)
+                sed_cmd = "sed -e '%si%s' -e '%sd' %s > %s/temp.c" % (line, mod_line, line, file_name, tmp_dir)
+                os.system("echo %s >> %s/sed_cmd" % (sed_cmd, tmp_dir))
                 os.system(sed_cmd)
-                os.system("cp ./tmp/temp.c %s" % file_name)
+                os.system("cp %s/temp.c %s" % (tmp_dir, file_name))
 
         print "process " + s + " again"
         if os.system(command) != 0:
@@ -286,10 +286,10 @@ def BUILD_BUG_ON_process(bug_info):
                 sed_cmd = "sed -n '%sp' %s" % (line, file_name)
                 orig_line = os.popen(sed_cmd).read()
                 mod_line = "//" + orig_line
-                sed_cmd = "sed -e '%si%s' -e '%sd' %s > ./tmp/temp.c" % (line, mod_line, line, file_name)
-                os.system("echo %s >> ./tmp/sed_cmd" % sed_cmd)
+                sed_cmd = "sed -e '%si%s' -e '%sd' %s > %s/temp.c" % (line, mod_line, line, file_name, tmp_dir)
+                os.system("echo %s >> %s/sed_cmd" % (sed_cmd, tmp_dir))
                 os.system(sed_cmd)
-                os.system("cp ./tmp/temp.c %s" % file_name)
+                os.system("cp %s/temp.c %s" % (tmp_dir, file_name))
 
         print "process " + s + " again"
         if os.system(command) != 0:
@@ -301,9 +301,9 @@ def BUILD_BUG_ON_process(bug_info):
 
 # common error handler
 def error_handle():
-	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> ./tmp/log 2>./tmp/bug_info'])
+	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> '+tmp_dir+'/log 2>'+tmp_dir+'/bug_info'])
 	os.system(command)
-	bug_info = os.popen("cat ./tmp/bug_info").read()
+	bug_info = os.popen("cat "+tmp_dir+"/bug_info").read()
         # process VLAIS error
 	if bug_info.find('variable length array in structure') >= 0:
 		print "find VLAIS error, try to fix..."
@@ -336,7 +336,8 @@ elif MODE == 2:
 	clang_args="-cc1 -std=gnu89 -print-stats -load " + plugin + ' -plugin decl-filter -plugin-arg-decl-filter ' + database
 
 # restore temporary log file
-os.system('rm -rf ./tmp; mkdir ./tmp; echo > ./tmp/log; echo > ./tmp/error; echo > ./tmp/cmd; echo > ./tmp/sed_cmd')
+#os.system('rm -rf ./tmp; mkdir ./tmp; echo > ./tmp/log; echo > ./tmp/error; echo > ./tmp/cmd; echo > ./tmp/sed_cmd')
+os.system('rm -rf ./tmp; mkdir ./tmp')
 for s in SRC_LIST:
 #	print "s in SRC_LIST:: ",s
 	# ignore scripts and tools directory
@@ -355,13 +356,27 @@ for s in SRC_LIST:
 #	print kernel_args
 
 	s = s.replace('.o', '.c')
+
+# create tmp file for each file
+	tmp_dir = "./tmp" + s
+	tmp_error = tmp_dir + '/error'
+	tmp_log = tmp_dir + '/log'
+	tmp_cmd = tmp_dir + '/cmd'
+	os.system('mkdir -p ' + tmp_dir)
+	os.system('touch ' + tmp_error)
+	os.system('touch ' + tmp_log)
+	os.system('touch ' + tmp_cmd)
+									
+
 	print "processing file " + s
-	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> ./tmp/log 2>>./tmp/error'])
+	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> ' + tmp_log + ' 2>> '+tmp_error])
 #	print "### command :: ",command
-	os.system('echo %s >> ./tmp/error' % s)
-	os.system('echo %s >> ./tmp/log' % s)
-	os.system('echo %s >> ./tmp/cmd' % s)
-	os.system('echo %s >> ./tmp/cmd' % kernel_args)
+	os.system('echo %s >> %s' % (s,tmp_error))
+	os.system('echo %s >> %s' % (s, tmp_log))
+	os.system('echo %s >> %s' % (s, tmp_cmd))
+	os.system('echo %s >> %s' % (kernel_args, tmp_cmd))
+	os.system('echo %s >> %s' % (command, tmp_cmd))
+						 
 	if os.system(command) != 0:
 		error_handle()
 # restore files which were modified
