@@ -1,1 +1,6 @@
 .*.swp
+*.db
+*/tmp
+*.pyc
+*/build
+

@@ -15,6 +15,7 @@
 
 解压后会出现llvm文件夹，执行下面的命令
 
+	$cd llvm
 	$mkdir build-llvm
 	$cd build-llvm
 	$../configure --enable-optimized
