@@ -73,6 +73,19 @@ if MODE == 1:
 	conn.commit()
 print "Database file is " + db_file
 
+# initialize database of mode 1
+def init_db(name):
+	if os.path.exists(name):
+		return
+	conn = sqlite3.connect(name)
+	cur = conn.cursor()
+	cur.execute('CREATE TABLE IF NOT EXISTS decls (name TEXT NOT NULL, type INTEGER NOT NULL, file TEXT NOT NULL, linum INTEGER NOT NULL, decl TEXT NOT NULL, PRIMARY KEY(name, file, decl))')
+	cur.execute('CREATE TABLE IF NOT EXISTS record_fields (name TEXT NOT NULL, fname TEXT NOT NULL, decl TEXT NOT NULL, PRIMARY KEY(name, fname))')
+	cur.execute('CREATE TABLE IF NOT EXISTS incdeps (file TEXT NOT NULL, linum TEXT NOT NULL, included TEXT NOT NULL, PRIMARY KEY(file, linum, included))')
+	cur.execute('CREATE TABLE IF NOT EXISTS explored (file TEXT NOT NULL, PRIMARY KEY(file))')
+	conn.commit()
+	conn.close()
+
 # start analyzing
 print "Start analyzing... "
 plugin = ''
@@ -229,7 +242,7 @@ def VLAIS_process(bug_info, tmp_dir, s, command, kernel_args):
 
 	print "process " + s + " again"
 	if os.system(command) != 0:
-		error_handle(s, kernel_args, tmp_dir)
+		error_handle(s, kernel_args, tmp_dir, command)
 		restore_file(file_name)
 	elif not restore_file(file_name):
 		return False
@@ -304,8 +317,11 @@ def BUILD_BUG_ON_process(bug_info, tmp_dir):
         return True
 
 # common error handler
-def error_handle(s, kernel_args, tmp_dir):
-	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> '+tmp_dir+'/log 2>'+tmp_dir+'/bug_info'])
+def error_handle(s, kernel_args, tmp_dir, command):
+#	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> '+tmp_dir+'/log 2>'+tmp_dir+'/bug_info'])
+	if command.endswith("error"):
+		command = command[:-5]
+		command += "bug_info"
 	os.system(command)
 	bug_info = os.popen("cat "+tmp_dir+"/bug_info").read()
         # process VLAIS error
@@ -334,10 +350,12 @@ clang_args = ''
 
 # MODE 1 will load dump-decls pass
 if MODE == 1:
-	clang_args="-cc1 -std=gnu89 -load " + plugin + ' -plugin dump-decls -plugin-arg-dump-decls ' + database
+	clang_args="-cc1 -std=gnu89 -load " + plugin + ' -plugin dump-decls -plugin-arg-dump-decls ' 
 # MODE 2 will load decl-filter pass
 elif MODE == 2:	
 	clang_args="-cc1 -std=gnu89 -print-stats -load " + plugin + ' -plugin decl-filter -plugin-arg-decl-filter ' + database
+
+db_set = []
 
 def analyze_file(s):
 #	print "s in SRC_LIST:: ",s
@@ -353,6 +371,7 @@ def analyze_file(s):
 	kernel_args = '-' + ' -'.join(compile_cmd)
         if kernel_args == '-':
             return
+
 #	print "Compile command is : "
 #	print kernel_args
 
@@ -367,15 +386,27 @@ def analyze_file(s):
 	os.system('touch ' + tmp_log)
 	os.system('touch ' + tmp_cmd)
 
+	# compute clang args with private database
+	db_name  = ''
+	if MODE == 1:
+		db_name = tmp_dir + '/' + os.path.basename(s).replace('.c', '.db')
+		if db_name not in db_set:
+			init_db(db_name)
+			db_set.append(db_name)
+		else:
+			print "[Warning]Found a repeated database: " + db_name
+#		clang_args += db_name
+
 	print "processing file " + s
-	command = ' '.join(['clang', clang_args, asm_args, clang_include, kernel_args, s, '>> ' + tmp_log + ' 2>> '+tmp_error])
+	command = ' '.join(['clang', clang_args, db_name, asm_args, clang_include, kernel_args, s, '>> ' + tmp_log + ' 2>> '+tmp_error])
 #	print "### command :: ",command
 	os.system('echo %s >> %s' % (s,tmp_error))
 	os.system('echo %s >> %s' % (s, tmp_log))
 	os.system('echo %s >> %s' % (s, tmp_cmd))
 	os.system('echo %s >> %s' % (kernel_args, tmp_cmd))
+	os.system('echo %s >> %s' % (command, tmp_cmd))
 	if os.system(command) != 0:
-		error_handle(s, kernel_args, tmp_dir)
+		error_handle(s, kernel_args, tmp_dir, command)
 
 # restore temporary log file
 os.system('rm -rf ./tmp; mkdir ./tmp')
