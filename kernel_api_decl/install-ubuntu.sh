@@ -36,7 +36,7 @@ cd build-llvm
 # configure llvm
 ../configure --enable-optimized
 # get number of cores
-num='cat /proc/cpuinfo | grep "cpu cores" | wc -l'
+num=$(cat /proc/cpuinfo | grep "cpu cores" | wc -l)
 # start build
 if [ ${num} > 1 ]
 then 
