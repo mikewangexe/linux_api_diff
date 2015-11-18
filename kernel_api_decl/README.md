@@ -22,7 +22,7 @@
 
 2. 分析目标代码所使用的内核接口，这里假设目标代码为内核中的drivers/net/ehternet/intel/e1000（注：如果想要对两个版本的内核中所有的接口进行差异性分析，这里的步骤2可以跳过）:
 
-		$python kernel_api.py -obj /home/xxx/linux/drivers/net/ehternet/intel/e1000/ -mode 2
+		$python kernel_api.py -obj /home/xxx/linux/drivers/net/ehternet/intel/e1000/ -abs /home/xxx/linux/ -mode 2
 
 3. 运行结束后能够生成数据库文件api_depend.db，其中储存着目标代码所使用的内核接口信息
 
