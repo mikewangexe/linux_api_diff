@@ -2,6 +2,7 @@
 
 # packages required
 packages=(
+"build-essential"
 "python"
 "sqlite3"
 "libsqlite3-dev"
