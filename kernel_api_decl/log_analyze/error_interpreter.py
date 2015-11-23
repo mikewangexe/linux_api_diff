@@ -125,11 +125,19 @@ class Error:
 		if self.api == '' or len(self.diff_result) == 0:
 			print "[ERROR]: information is incomplete, can not interpret."
 			return
-		self.commit = commit_locate(self.api, self.diff_result[0].fname, self.kind)
+		# for general changes
+		if self.sub_api == "":
+			self.commit = commit_locate(self.api, self.diff_result[0].fname, self.diff_result[0].type_chg)
+		else:
+		# for some changes between member and fields
+			self.commit = commit_locate(self.sub_api, self.diff_result[0].fname, self.diff_result[0].type_chg)
 		print "[INTERPRET] this error may be caused by the commit following\n"
 		for c in self.commit:
 			print c.filter_output(self.api)
-		self.suggestion = suggestion_search(self.api, self.diff_result[0].type_chg)
+		if self.sub_api == "":
+			self.suggestion = suggestion_search(self.commit, self.api, self.diff_result[0].type_chg)
+		else:
+			self.suggestion = suggestion_search(self.commit, self.sub_api, self.diff_result[0].type_chg)
 		print "[INTERPRET] and maybe you could fix this error as the following commit does\n"
 		for s in self.suggestion:
 			print s.filter_output(self.api)
@@ -217,11 +225,11 @@ def get_relative_path(abspath):
 	return fname
 
 # locate commits which change the api
-def commit_locate(api, fname, kind):
+def commit_locate(api, fname, diff_type):
 	rpath = get_relative_path(fname)
 	os.chdir(LINUX_GIT)
 	git_cmd = ''
-	if kind == 'arguments':
+	if diff_type.find("CHANGED") > 0 :
 		git_cmd = "git log --no-merges -p -G'"
 	else:
 		git_cmd = "git log --no-merges -p -S'"
@@ -238,16 +246,27 @@ def commit_locate(api, fname, kind):
 	os.chdir(CUR_DIR)
 	return commits
 
-def suggestion_search(api, chg_type):
+def suggestion_search(reason_commits, api, chg_type):
 	os.chdir(LINUX_GIT)
 	git_cmd = ''
+	commits = []
+
+	# find suggestions from reason commits
+	if len(reason_commits) > 0:
+		git_cmd = "git log -p -1 " + reason_commits[0].commit_id
+		reason_patch = LogPatchSplitter(os.popen(git_cmd))
+		for rp in reason_patch:
+			rc = commit()
+			if rc.full_commit_parser(rp) == True:
+				commits.append(rc)
+
 	if chg_type == 'DECL CHANGED':
-		git_cmd = "git log --no-merges -p -3 -G'"
+		git_cmd = "git log --no-merges -p -2 -G'"
 	else:
-		git_cmd = "git log --no-merges -p -3 -S'"
+		git_cmd = "git log --no-merges -p -2 -S'"
 	git_cmd += api + "' " + OLD_VER + ".." + NEW_VER + " -- drivers/"
 	patches = LogPatchSplitter(os.popen(git_cmd))
-	commits = []
+	
 	for p in patches:
 		tmpc = commit()
 		if tmpc.full_commit_parser(p) == True:
@@ -334,13 +353,13 @@ for p in problems:
 		# if cannot find diff result, we will ignore it
 		if len(e.diff_result) == 0:
 			continue
-		print e
+	#	print e
 		print "----Error information as follows:"
 		print "\t" + e.get_err_info()
 		print "----Related difference analysis results as follows:"
 		print e.diff_result[0]
 		print 'Try to interpret...'
-#		e.interpret()
+		e.interpret()
 		print 'Interpret finished.'
 print 'All problems done.'
 #problems['undeclared'][6].interpret()

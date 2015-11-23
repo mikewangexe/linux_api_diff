@@ -67,7 +67,7 @@ err_patterns = {
 	'expected': re.compile('^([^:]+):([0-9]+):[0-9]+: error: expected ‘=’, ‘,’, ‘;’, ‘asm’ or ‘__attribute__’ before ‘([^()]*)’$'),
 	'implicit': re.compile('^([^:]+):([0-9]+):[0-9]+: error: implicit declaration of function ‘([^()]*)’.*$'),
 	'undeclared': re.compile('^([^:]+):([0-9]+):[0-9]+: error: ‘([^()]*)’ undeclared \(first use in this function\)$'),
-	'arguments': re.compile('^([^:]+):([0-9]+):[0-9]+: error: too few arguments to function ‘([^()]*)’$'),
+	'arguments': re.compile('^([^:]+):([0-9]+):[0-9]+: error: too .* arguments to function ‘([^()]*)’$'),
 	'no member': re.compile('^([^:]+):([0-9]+):[0-9]+: error: ‘([^()]*)’ has no member named ‘([^()]*)’$'),
 	'unknown field': re.compile('^([^:]+):([0-9]+):[0-9]+: error: unknown field ‘([^()]*)’ specified in initializer'),
 }
