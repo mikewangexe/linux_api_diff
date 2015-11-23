@@ -196,6 +196,22 @@ def unknown_field_handle(info, next_line, field_name):
 	error.set_sub_api(field_name)
 	problems['unknown field'].append(error)
 
+# HIBIT error handle
+def HIBIT_handle(info, next_line, api_name):
+	# the api_name is not the really api name, but the variable name
+	words = next_line.split(' ')
+	api_pos = 0
+	while api_pos < len(words):
+		if words[api_pos] == api_name:
+			api_pos -= 1
+			break
+		api_pos += 1
+	if api_pos < len(words):
+		general_handle(info, next_line, words[api_pos], 'HIBIT')
+		return
+	print "[Warning]: cannot find the api name of this error."
+	return
+
 # general error handle
 def general_handle(info, next_line, api_name, type_name):
 	global problems
@@ -305,6 +321,7 @@ problems['undeclared'] = []
 problems['arguments'] = []
 problems['no member'] = []
 problems['unknown field'] = []
+problems['HIBIT'] = []
 
 for line in err_file:
 	m = err_patterns['expected'].match(line)
@@ -332,6 +349,11 @@ for line in err_file:
 	m = err_patterns['unknown field'].match(line)
 	if m:
 		unknown_field_handle(line, err_file.next(), m.group(3))
+		continue
+	# HIBIT is "has initializer but incomplete type"
+	m = err_patterns['HIBIT'].match(line)
+	if m:
+		HIBIT_handle(line, err_file.next(), m.group(3))
 		continue
 
 p_count = 0
