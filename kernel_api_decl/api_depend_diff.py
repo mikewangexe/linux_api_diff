@@ -153,6 +153,10 @@ else:
 	FILE = 2
 	START_LINE = 3
 	KIND = 1
+# find the top kernel source path
+cur_old.execute('select file from decls where file like "%kconfig.h"')
+kernel_dir = cur_old.fetchone()
+kdir_len = len(kernel_dir[:-23])
 
 # process differences in decls
 for d in decls_obj:
@@ -190,13 +194,14 @@ for d in decls_obj:
 			quit()
 	elif len(decls_old) == len(decls_new):
 		for i in range(len(decls_old)):
-			if os.path.basename(decls_old[i][2]) == os.path.basename(decls_new[i][2]) and decls_old[i][4] == decls_new[i][4]:
+			if decls_old[i][2][kdir_len:] == decls_new[i][2][kdir_len:] and decls_old[i][4] == decls_new[i][4]:
 				continue
 			else:
 				change_type = ''
-				if (not os.path.basename(decls_old[i][2]) == os.path.basename(decls_new[i][2])) and decls_old[i][4] == decls_new[i][4]:
+
+				if (not decls_old[i][2][kdir_len:] == decls_new[i][2][kdir_len:]) and decls_old[i][4] == decls_new[i][4]:
 					change_type = "FILE CHANGED"
-				elif os.path.basename(decls_old[i][2]) == os.path.basename(decls_new[i][2]) and (not decls_old[i][4] == decls_new[i][4]):
+				elif decls_old[i][2][kdir_len:] == decls_new[i][2][kdir_len:] and (not decls_old[i][4] == decls_new[i][4]):
 					change_type = "DECL CHANGED"
 				else:
 					change_type = "ALL CHANGED"
@@ -215,7 +220,7 @@ for d in decls_obj:
 		for l in less:
 			for m in more:
 				# type and file are same
-				if l[1] == m[1] and os.path.basename(l[2]) == os.path.basename(m[2]):
+				if l[1] == m[1] and l[2][kdir_len:] == m[2][kdir_len:]:
 					# definations are different
 					if not l[4] == m[4]:
 						if len(decls_old) > len(decls_new):
@@ -255,13 +260,13 @@ for m in macros_obj:
 			quit()
 	elif len(macros_old) == len(macros_new):
 		for i in range(len(macros_old)):
-			if os.path.basename(macros_old[i][2]) == os.path.basename(macros_new[i][2]) and macros_old[i][4] == macros_new[i][4]:
+			if macros_old[i][2][kdir_len:] == macros_new[i][2][kdir_len:] and macros_old[i][4] == macros_new[i][4]:
 				continue
 			else:
 				change_type = ''
-				if (not os.path.basename(macros_old[i][2]) == os.path.basename(macros_new[i][2])) and macros_old[i][4] == macros_new[i][4]:
+				if (not macros_old[i][2][kdir_len:] == macros_new[i][2][kdir_len:]) and macros_old[i][4] == macros_new[i][4]:
 					change_type = "FILE CHANGED"
-				elif os.path.basename(macros_old[i][2]) == os.path.basename(macros_new[i][2]) and (not macros_old[i][4] == macros_new[i][4]):
+				elif macros_old[i][2][kdir_len:] == macros_new[i][2][kdir_len:] and (not macros_old[i][4] == macros_new[i][4]):
 					change_type = "DECL CHANGED"
 				else:
 					change_type = "ALL CHANGED"
@@ -282,7 +287,7 @@ for m in macros_obj:
 		for le in less:
 			for mo in more:
 				# file is same
-				if os.path.basename(le[2]) == os.path.basename(mo[2]):
+				if le[2][kdir_len:] == mo[2][kdir_len:]:
 					# if found the same one, jump out the loop
 					if le[4] == mo[4]:
 						break
