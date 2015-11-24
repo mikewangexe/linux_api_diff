@@ -70,4 +70,5 @@ err_patterns = {
 	'arguments': re.compile('^([^:]+):([0-9]+):[0-9]+: error: too .* arguments to function ‘([^()]*)’$'),
 	'no member': re.compile('^([^:]+):([0-9]+):[0-9]+: error: ‘([^()]*)’ has no member named ‘([^()]*)’$'),
 	'unknown field': re.compile('^([^:]+):([0-9]+):[0-9]+: error: unknown field ‘([^()]*)’ specified in initializer'),
+	'HIBIT': re.compile('^([^:]+):([0-9]+):[0-9]+: error: variable ‘([^()]*)’ has initializer but incomplete type'),
 }
