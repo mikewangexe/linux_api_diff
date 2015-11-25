@@ -155,8 +155,11 @@ else:
 	KIND = 1
 # find the top kernel source path
 cur_old.execute('select file from decls where file like "%kconfig.h"')
-kernel_dir = cur_old.fetchone()
-kdir_len = len(kernel_dir[:-23])
+cur_new.execute('select file from decls where file like "%kconfig.h"')
+kernel_dir_old = cur_old.fetchone()[0].replace("/./", "/")
+kernel_dir_new = cur_new.fetchone()[0].replace("/./", "/")
+kdir_len_old = len(kernel_dir_old[:-23])
+kdir_len_new = len(kernel_dir_new[:-23])
 
 # process differences in decls
 for d in decls_obj:
@@ -167,8 +170,8 @@ for d in decls_obj:
 	value_list = []
 	cur_old.execute(sql_cmd)
 	cur_new.execute(sql_cmd)
-	decls_old = cur_old.fetchall()
-	decls_new = cur_new.fetchall()
+	decls_old = list(cur_old.fetchall())
+	decls_new = list(cur_new.fetchall())
 
 #	if d[NAME] == "task_struct":
 #		print d[NAME]
@@ -194,14 +197,20 @@ for d in decls_obj:
 			quit()
 	elif len(decls_old) == len(decls_new):
 		for i in range(len(decls_old)):
-			if decls_old[i][2][kdir_len:] == decls_new[i][2][kdir_len:] and decls_old[i][4] == decls_new[i][4]:
+			# replace "/./" from file column
+			decls_old[i] = list(decls_old[i])
+			decls_new[i] = list(decls_new[i])
+			decls_old[i][2] = decls_old[i][2].replace("/./", "/")
+			decls_new[i][2] = decls_new[i][2].replace("/./", "/")
+	
+			if decls_old[i][2][kdir_len_old:] == decls_new[i][2][kdir_len_new:] and decls_old[i][4] == decls_new[i][4]:
 				continue
 			else:
 				change_type = ''
 
-				if (not decls_old[i][2][kdir_len:] == decls_new[i][2][kdir_len:]) and decls_old[i][4] == decls_new[i][4]:
+				if (not decls_old[i][2][kdir_len_old:] == decls_new[i][2][kdir_len_new:]) and decls_old[i][4] == decls_new[i][4]:
 					change_type = "FILE CHANGED"
-				elif decls_old[i][2][kdir_len:] == decls_new[i][2][kdir_len:] and (not decls_old[i][4] == decls_new[i][4]):
+				elif decls_old[i][2][kdir_len_old:] == decls_new[i][2][kdir_len_new:] and (not decls_old[i][4] == decls_new[i][4]):
 					change_type = "DECL CHANGED"
 				else:
 					change_type = "ALL CHANGED"
@@ -214,13 +223,21 @@ for d in decls_obj:
 		if len(decls_old) > len(decls_new):
 			less = decls_new
 			more = decls_old
+			kdir_len_less = kdir_len_new
+			kdir_len_more = kdir_len_old
 		else:
 			less = decls_old
 			more = decls_new
+			kdir_len_less = kdir_len_old
+			kdir_len_more = kdir_len_new
 		for l in less:
+			l = list(l)
+			l[2] = l[2].replace("/./", "/")
 			for m in more:
+				m = list(m)
+				m[2] = m[2].replace("/./", "/")
 				# type and file are same
-				if l[1] == m[1] and l[2][kdir_len:] == m[2][kdir_len:]:
+				if l[1] == m[1] and l[2][kdir_len_less:] == m[2][kdir_len_more:]:
 					# definations are different
 					if not l[4] == m[4]:
 						if len(decls_old) > len(decls_new):
@@ -242,8 +259,8 @@ for m in macros_obj:
 	value_list = []
 	cur_old.execute(sql_cmd)
 	cur_new.execute(sql_cmd)
-	macros_old = cur_old.fetchall()
-	macros_new = cur_new.fetchall()
+	macros_old = list(cur_old.fetchall())
+	macros_new = list(cur_new.fetchall())
 
 	if len(macros_old) == 0 and len(macros_new) == 0:
 		print "[Warning] macro \'" + m[NAME] + "\' isn't found in both old and new database."
@@ -260,13 +277,19 @@ for m in macros_obj:
 			quit()
 	elif len(macros_old) == len(macros_new):
 		for i in range(len(macros_old)):
-			if macros_old[i][2][kdir_len:] == macros_new[i][2][kdir_len:] and macros_old[i][4] == macros_new[i][4]:
+			# replace "/./" from file column
+			macros_old[i] = list(macros_old[i])
+			macros_new[i] = list(macros_new[i])
+			macros_old[i][2] = macros_old[i][2].replace("/./", "/")
+			macros_new[i][2] = macros_new[i][2].replace("/./", "/")
+			
+			if macros_old[i][2][kdir_len_old:] == macros_new[i][2][kdir_len_new:] and macros_old[i][4] == macros_new[i][4]:
 				continue
 			else:
 				change_type = ''
-				if (not macros_old[i][2][kdir_len:] == macros_new[i][2][kdir_len:]) and macros_old[i][4] == macros_new[i][4]:
+				if (not macros_old[i][2][kdir_len_old:] == macros_new[i][2][kdir_len_new:]) and macros_old[i][4] == macros_new[i][4]:
 					change_type = "FILE CHANGED"
-				elif macros_old[i][2][kdir_len:] == macros_new[i][2][kdir_len:] and (not macros_old[i][4] == macros_new[i][4]):
+				elif macros_old[i][2][kdir_len_old:] == macros_new[i][2][kdir_len_new:] and (not macros_old[i][4] == macros_new[i][4]):
 					change_type = "DECL CHANGED"
 				else:
 					change_type = "ALL CHANGED"
@@ -281,13 +304,21 @@ for m in macros_obj:
 		if len(macros_old) > len(macros_new):
 			less = macros_new
 			more = macros_old
+			kdir_len_less = kdir_len_new
+			kdir_len_more = kdir_len_old
 		else:
 			less = macros_old
 			more = macros_new
+			kdir_len_less = kdir_len_old
+			kdir_len_more = kdir_len_new
 		for le in less:
+			le = list(le)
+			le[2] = le[2].replace("/./", "/")
 			for mo in more:
+				mo = list(mo)
+				mo[2] = mo[2].replace("/./", "/")
 				# file is same
-				if le[2][kdir_len:] == mo[2][kdir_len:]:
+				if le[2][kdir_len_less:] == mo[2][kdir_len_more:]:
 					# if found the same one, jump out the loop
 					if le[4] == mo[4]:
 						break
